@@ -1,6 +1,6 @@
 # Quarkus Performance Testing with JMeter
 
-This is a sample project only for performance testing with [JMeter](https://jmeter.apache.org/) and [JMeter DSL](https://abstracta.github.io/jmeter-java-dsl/).
+This is a sample project for performance testing with [JMeter](https://jmeter.apache.org/) and [JMeter DSL](https://abstracta.github.io/jmeter-java-dsl/).
 The JMeter application is open source software, a 100% pure Java application designed to load test functional behavior and measure performance.
 It is recommended to have, at least, **Java 11** and [Docker](https://www.docker.com/) installed.
 
@@ -33,13 +33,6 @@ public class PerformanceTest {
 
 As shown in the previous example, it can be easily executed with JUnit, modularized in code, and easily integrated into any CI/CD pipeline.
 Additionally, it makes it easy to debug the execution of test plans with the usual IDE debugger tools.
-
-## Project structure
-
-This project was generated with [code.quarkus.io](https://code.quarkus.io/).
-All of the app's code goes in a folder named `src/main`.
-The **unit tests** and **performance tests** are in the `src/test` and `src/performanceTest` folders.
-Static files are placed in `src/main/resources` folder.
 
 ## Available gradle tasks
 
@@ -103,24 +96,25 @@ To execute the performance tests, you can use the next command:
 ./gradlew performanceTest -PisJMeter
 ```
 
-[JUnit 5](https://junit.org/junit5/), [JMeter DSL](https://abstracta.github.io/jmeter-java-dsl/) and [AssertJ](https://assertj.github.io/doc/) are used in performance tests.
+[JUnit 5](https://junit.org/junit5/), [JMeter DSL](https://abstracta.github.io/jmeter-java-dsl/), [Testcontainers](https://www.testcontainers.org/) and [AssertJ](https://assertj.github.io/doc/) are used in performance tests.
 Like unit tests, you can also run subsets of a test suite.
 See the [Test filtering](https://docs.gradle.org/current/userguide/java_testing.html#test_filtering) section of the Gradle documentation
 
-You can see the HTML report opening the *index.html* file in your web browser from `target/jmeter-report` folder.
+You can see the HTML report opening the *index.html* file in your web browser from `build/jmeter-report` folder.
 
 ## Building
 
 This project follows [Semantic Versioning](https://semver.org/) and uses git tags to define the current version of the project.
 Use `./gradlew currentVersion` to print the current version extracted from SCM and `./gradlew release` to release the current version.
 
-To build and create a JAR image, you can use the next command:
+To build and create a JAR file, you can use the next command:
 
 ```bash
 ./gradlew build
 ```
 
-This project contains a Dockerfile that you can use to build your Docker image. Use `./gradlew buildImage` after `build` command.
+This project contains a Dockerfile that you can use to build your Docker image.
+Use `./gradlew buildImage` after `build` command.
 
 ## Debugging
 
@@ -130,9 +124,9 @@ You can customize the [log verbosity](https://docs.gradle.org/current/userguide/
 
 This project includes [Swagger](https://swagger.io/). To get a visual representation of the interface and send requests for testing purposes go to <http://localhost:8080/q/swagger-ui/>.
 
-## Reference Documentation
+## Reference documentation
 
-For further reference, please consider the following sections:
+For further reference, please consider the following articles:
 
 - [Official Gradle documentation](https://docs.gradle.org)
 - [Quarkus QuickStarts](https://github.com/quarkusio/quarkus-quickstarts)
