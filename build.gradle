@@ -1,0 +1,153 @@
+plugins {
+    id 'com.star-zero.gradle.githook' version '1.2.1'
+    id 'io.quarkus' version '2.7.1.Final'
+    id 'pl.allegro.tech.build.axion-release' version '1.15.0'
+    id 'ru.netris.commitlint' version '1.4.1'
+    id 'checkstyle'
+    id 'jacoco'
+	id 'java'
+}
+
+group = 'app'
+version = scmVersion.version
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    performanceTest {
+        compileClasspath += sourceSets.main.output + project.configurations.testCompileClasspath
+        runtimeClasspath += sourceSets.main.output + project.configurations.testRuntimeClasspath
+    }
+}
+
+dependencies {
+    implementation 'io.quarkus:quarkus-resteasy-jackson:2.7.1.Final'
+    implementation 'io.quarkus:quarkus-arc:2.7.1.Final'
+    implementation 'io.quarkus:quarkus-resteasy:2.7.1.Final'
+    implementation 'io.quarkus:quarkus-smallrye-openapi:2.7.1.Final'
+
+    testImplementation 'us.abstracta.jmeter:jmeter-java-dsl:1.9'
+    testImplementation 'io.quarkus:quarkus-junit5:2.7.1.Final'
+    testImplementation 'io.quarkus:quarkus-junit5-mockito:2.7.1.Final'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.8.0'
+    testImplementation 'org.assertj:assertj-core:3.23.1'
+    testImplementation 'org.testcontainers:testcontainers:1.17.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.3'
+
+    components {
+        withModule("org.apache.jmeter:ApacheJMeter_core", JmeterRule)
+        withModule("org.apache.jmeter:ApacheJMeter_java", JmeterRule)
+        withModule("org.apache.jmeter:ApacheJMeter", JmeterRule)
+        withModule("org.apache.jmeter:ApacheJMeter_http", JmeterRule)
+        withModule("org.apache.jmeter:ApacheJMeter_functions", JmeterRule)
+        withModule("org.apache.jmeter:ApacheJMeter_components", JmeterRule)
+        withModule("org.apache.jmeter:ApacheJMeter_config", JmeterRule)
+        withModule("org.apache.jmeter:jorphan", JmeterRule)
+    }
+
+    if (project.hasProperty("isJMeter")) {
+        implementation 'io.quarkus.platform:quarkus-bom:2.7.1.Final'
+    } else {
+        implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:2.7.1.Final')
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+githook {
+    failOnMissingHooksDir = false
+    hooks {
+        'commit-msg' {
+            task = 'commitlint'
+        }
+    }
+}
+
+checkstyle {
+    toolVersion = '9.0'
+    configFile = file('checkstyle.xml')
+}
+
+jacoco {
+    toolVersion = '0.8.7'
+}
+
+jacocoTestReport {
+    dependsOn test
+    finalizedBy jacocoTestCoverageVerification
+}
+
+jacocoTestCoverageVerification {
+    dependsOn test
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.8
+            }
+        }
+    }
+}
+
+check {
+    dependsOn.clear()
+    dependsOn 'lint', 'test'
+}
+
+task lint() {
+    dependsOn 'checkstyle'
+    description = 'Runs several static code analysis.'
+    group = 'Verification'
+}
+
+test {
+    finalizedBy jacocoTestReport
+	useJUnitPlatform()
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+task performanceTest(type: Test) {
+    description = 'Runs the functional tests.'
+    group = 'Verification'
+    testClassesDirs = sourceSets.performanceTest.output.classesDirs
+    classpath = sourceSets.performanceTest.runtimeClasspath
+
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+task checkstyle() {
+    dependsOn 'checkstylePerformanceTest', 'checkstyleMain', 'checkstyleTest'
+    description = 'Runs Checkstyle analysis for the source folder.'
+    group = 'Verification'
+}
+
+task buildImage(type: Exec) {
+    commandLine 'docker', 'build', '-f', 'src/main/docker/Dockerfile', '-t', 'quarkus-api', '.'
+    description = 'Builds a Docker image of the application.'
+    group = 'Build'
+}
+
+@CacheableRule
+class JmeterRule implements ComponentMetadataRule {
+    void execute(ComponentMetadataContext context) {
+        context.details.allVariants {
+            withDependencies {
+                removeAll { it.group == "org.apache.jmeter" && it.name == "bom" }
+            }
+        }
+    }
+}
